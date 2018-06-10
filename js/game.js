@@ -22,7 +22,7 @@ const gameController = (function(){
         [6, 4, 2]
     ];
 
-    // class Player
+    // Class Player
     class Player {
         constructor(name, human = true){
             this.name = name;
@@ -30,7 +30,7 @@ const gameController = (function(){
         }
     }
 
-    // check if the board is filled
+    // Check if the board is filled
     const boardFilled = () => {
         let check = false;
         check = boxes.every((box)=> $(box).attr('data-marked'));
@@ -48,7 +48,7 @@ const gameController = (function(){
         return availBoxes;
     }
 
-    // Reset the whole board to start a new game
+    // Reset the game board and start a new game
     const resetBoard = (player) =>{
         // Reset active player variable
         player = 1;
@@ -74,7 +74,7 @@ const gameController = (function(){
     /* Determine a winner
        Chaining array iteration methods some() and every() 
        some() tests if at least one element in the array of winning moves contains numbers belonging to player '1' or '2'   
-       every() tests if all elements in a given collection are equal to '1' or '2'      
+       every() tests if all elements in a given collection are equal      
     */
     const getWinner = (player) => {
         return winMoves.some(rowOfThree => {
@@ -87,7 +87,6 @@ const gameController = (function(){
 
     // Highlight the active player 
     const nextTurn = (player) => {
-        // Keep changing unless the board is filled
         if(!boardFilled()){
             if(player === 1){
                 $('#player1').addClass('active');
@@ -112,7 +111,6 @@ const gameController = (function(){
 
         // Detect a lucky winner
         detectWinner: (p1, p2, win1Screen, win2Screen, tieScreen) => {
-            // Setting up flags
             let pla1 = false, pla2 = false;
             // Check if there's a winner
             pla1 = getWinner(1);
@@ -127,7 +125,7 @@ const gameController = (function(){
                     $('.message').text(`Winner: ${p2.name}`);
                     win2Screen();
                 }
-            // if the board is filled and no winner is found, declare 'It's a Tie!'
+            // if the board is filled and no winner is found, then 'It's a Tie!'
             } else {
                 $('.message').text(`It's a tie`);
                 tieScreen();
@@ -140,7 +138,7 @@ const gameController = (function(){
         // Highlight the active player 
         markActivePlayer: (player) => nextTurn(player),
 
-        // Mark each box, human playes against human 
+        // Mark each box, (game type: human vs human)
         setBox: (player, e)=> {
             // Select data-marked attribute
             const $attr = $(e.target).attr('data-marked');
@@ -177,7 +175,8 @@ const gameController = (function(){
                 return player;
             }
         },
-        // Human vs Ai game
+
+        // Game type: human vs 'dumb' AI cos haven't implemented the minimax algorithm yet.
         setBoxAiMode: (e, huPla = 1, aIpla = 2) => {
             let availSpots, aiRandMove;
             const $attr = $(e.target).attr("data-marked");
@@ -187,12 +186,15 @@ const gameController = (function(){
                 $(e.target).addClass("box-filled-1").css({ "background-image": "url(img/o.svg)" });
             }
             // For Ai player
+            // Get all available spots on the game board
             availSpots = availableSpot();
+            // Unless there are available spots 
             if (availSpots.length > 0) {
+                // Get a rand spot from a collection of spots
                 aiRandMove = randMove(availSpots);
+                // Highlight Ai's turn  
                 $('#player1').removeClass('active');
                 $('#player2').addClass('active');
-                const arr = boxes.filter((box, i) => availSpots.includes(i));
                 $(aiRandMove).attr('data-marked', `${aIpla}`);
                 // Ai opponent responds to user's move within a range of 300 - 1200 milliseconds
                 let aiRandThink = Math.floor(Math.random() * (1200 - 300) + 300);
@@ -204,11 +206,12 @@ const gameController = (function(){
             }
         },
 
-        // Class Player
+        // Return the instance of the class Player to access it from the main module
         addPlayer: (name, human) => {
             return new Player(name, human);
         },
-        // Set players' names, check if player 2 is human or ai
+
+        // Set players' names, check if player '2' is human or ai
         setPlayers: (pla1, pla2) => {
             if ($('#input-1').val() !== '') {
                 pla1.name = $('#input-1').val();
@@ -268,7 +271,7 @@ const UIController = (function(){
         `
     }
 
-    // Update the finish screen
+    // Setting for the finish screen
     const updateScreen = (className, text) => {
         $('#finish').slideDown(1000);
         $('#board').fadeOut(1000);
@@ -291,8 +294,8 @@ const UIController = (function(){
             $('#board').hide();
             // Set the default player
             $('#player1').addClass('active');
-            // Set player's default settings
-            $('#human-1, #human-2').prop("checked", true);
+            // 2nd player's default settings
+            $('#human-2').prop("checked", true);
         },
         // Settings for winner/tie screen
         winOneScreen: () => updateScreen('screen-win-one'),
@@ -307,6 +310,7 @@ const mainController = (function(gameCtrl, UICtrl){
 
     // active player (player1: 1, player2: 2)
     let activePlayer = 1; 
+
     // Create instances of two players
     const playerOne = gameCtrl.addPlayer();
     const playerTwo = gameCtrl.addPlayer();
@@ -350,14 +354,14 @@ const mainController = (function(gameCtrl, UICtrl){
             }
         });
 
-        // Hide start screen 
+        // Hide the start screen 
         $('#start .button').click(e => {
-            // Prevent the default behavior
+            // Prevent default behavior
             e.preventDefault();
-            // Hide the start screen and show the board
+            // Hide the start screen and show the game board
             $('#start').slideUp(300);
             $('#board').slideDown(600);
-            // Setup players
+            // Setup 2 players
             gameCtrl.setPlayers(playerOne, playerTwo);
         });
 
@@ -366,6 +370,7 @@ const mainController = (function(gameCtrl, UICtrl){
             const attr = $(e.target).is('[data-marked]');
             // Human vs human
             if (playerTwo.human === true) {
+                // Handle each box on click
                 activePlayer = gameCtrl.setBox(activePlayer, e);
                 // Highlight the active player 
                 gameCtrl.markActivePlayer(activePlayer);
@@ -379,7 +384,9 @@ const mainController = (function(gameCtrl, UICtrl){
                 );
             // Human vs Ai
             } else {
+                // Prevent any actions on filled boxes  
                 if(!attr){
+                    // Set human player and behavior for ai player 
                     gameCtrl.setBoxAiMode(e);
                     // Detect a winner/tie
                     gameCtrl.detectWinner(
@@ -392,11 +399,12 @@ const mainController = (function(gameCtrl, UICtrl){
                 }
             }
         });   
-        // New Game
+
+        // New game
         $('#finish .button').click( e => {
-            // Prevent the default behavior
+            // Prevent default behavior
             e.preventDefault();
-            // Reset the board, hide the winner/tie screen and show a new board 
+            // Reset the game board, hide the winner/tie screen and show a new board 
             if ($(e.target).hasClass('button')){
                 activePlayer = gameCtrl.reset(activePlayer);
                 $('#finish').fadeOut(150);
